@@ -28,6 +28,23 @@ class GitHubClient:
                 star_count = data.get("stargazers_count", 0)
                 print(f"GitHub stars for {owner}/{repo}: {star_count}")
                 return star_count
+            elif response.status_code == 401 and self.github_token:
+                # Token expired or invalid, retry without authentication
+                print("GitHub token expired/invalid, retrying without authentication")
+                headers = {
+                    "Accept": "application/vnd.github.v3+json",
+                    "User-Agent": "ZenML-LaMetric-App"
+                }
+                response = requests.get(url, headers=headers, timeout=10)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    star_count = data.get("stargazers_count", 0)
+                    print(f"GitHub stars for {owner}/{repo} (unauthenticated): {star_count}")
+                    return star_count
+                else:
+                    print(f"Failed to get GitHub stars (unauthenticated): {response.status_code}")
+                    return 0
             else:
                 print(f"Failed to get GitHub stars: {response.status_code} - {response.text}")
                 return 0
