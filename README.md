@@ -12,7 +12,7 @@ pip install -r requirements.txt
 2. Configure environment variables:
 ```bash
 cp .env.example .env
-# Edit .env with your Mixpanel credentials
+# Edit .env with your Mixpanel service account credentials
 ```
 
 3. Run locally:
@@ -30,7 +30,8 @@ fly launch
 2. Set environment variables:
 ```bash
 fly secrets set MIXPANEL_PROJECT_ID=your_project_id
-fly secrets set MIXPANEL_API_SECRET=your_api_secret
+fly secrets set MIXPANEL_SERVICE_ACCOUNT_USERNAME=your_service_account_username
+fly secrets set MIXPANEL_SERVICE_ACCOUNT_SECRET=your_service_account_secret
 ```
 
 3. Deploy:

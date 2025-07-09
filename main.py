@@ -12,7 +12,8 @@ app = FastAPI(title="ZenML LaMetric App")
 # Initialize Mixpanel client
 mixpanel_client = MixpanelClient(
     project_id=os.getenv("MIXPANEL_PROJECT_ID"),
-    api_secret=os.getenv("MIXPANEL_API_SECRET")
+    service_account_username=os.getenv("MIXPANEL_SERVICE_ACCOUNT_USERNAME"),
+    service_account_secret=os.getenv("MIXPANEL_SERVICE_ACCOUNT_SECRET")
 )
 
 class LaMetricFrame(BaseModel):
@@ -52,7 +53,7 @@ async def get_mixpanel_metrics():
     """
     Fetch metrics from Mixpanel API
     """
-    if not mixpanel_client.project_id or not mixpanel_client.api_secret:
+    if not mixpanel_client.project_id or not mixpanel_client.service_account_username or not mixpanel_client.service_account_secret:
         # Return mock data if credentials not configured
         return [
             {"name": "Active Users", "value": "123"},
@@ -61,12 +62,12 @@ async def get_mixpanel_metrics():
     
     try:
         # Get actual metrics from Mixpanel
-        daily_active_users = await mixpanel_client.get_daily_active_users(days=1)
-        total_events = await mixpanel_client.get_total_events(days=1)
+        pipeline_runs = await mixpanel_client.get_pipeline_runs(days=7)
+        pipeline_runs_today = await mixpanel_client.get_pipeline_runs(days=1)
         
         return [
-            {"name": "Daily Active Users", "value": str(daily_active_users)},
-            {"name": "Events Today", "value": str(total_events)}
+            {"name": "Pipeline Runs (7d)", "value": str(pipeline_runs)},
+            {"name": "Pipeline Runs Today", "value": str(pipeline_runs_today)}
         ]
     except Exception as e:
         print(f"Error fetching Mixpanel metrics: {e}")
