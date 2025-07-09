@@ -27,6 +27,18 @@ class LaMetricResponse(BaseModel):
 async def root():
     return {"message": "ZenML LaMetric App"}
 
+@app.get("/debug")
+async def debug():
+    """Debug endpoint to test Mixpanel connectivity"""
+    if not mixpanel_client.service_account_username or not mixpanel_client.service_account_secret:
+        return {"error": "Service account credentials not configured"}
+    
+    try:
+        await mixpanel_client._test_api_connectivity()
+        return {"message": "Check logs for API test results"}
+    except Exception as e:
+        return {"error": str(e)}
+
 @app.get("/metrics", response_model=LaMetricResponse)
 async def get_metrics():
     """
