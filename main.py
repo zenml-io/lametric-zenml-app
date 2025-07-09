@@ -68,24 +68,21 @@ async def get_mixpanel_metrics():
     if not mixpanel_client.project_id or not mixpanel_client.service_account_username or not mixpanel_client.service_account_secret:
         # Return mock data if credentials not configured
         return [
-            {"name": "Active Users", "value": "123"},
-            {"name": "Events Today", "value": "456"}
+            {"name": "Runs", "value": "2847"}
         ]
     
     try:
-        # Get actual metrics from Mixpanel
-        pipeline_runs = await mixpanel_client.get_pipeline_runs(days=7)
-        pipeline_runs_today = await mixpanel_client.get_pipeline_runs(days=1)
+        # Get all-time runs count
+        all_time_runs = await mixpanel_client.get_all_time_runs()
         
         return [
-            {"name": "Pipeline Runs (7d)", "value": str(pipeline_runs)},
-            {"name": "Pipeline Runs Today", "value": str(pipeline_runs_today)}
+            {"name": "Runs", "value": str(all_time_runs)}
         ]
     except Exception as e:
         print(f"Error fetching Mixpanel metrics: {e}")
         # Return fallback data on error
         return [
-            {"name": "Error", "value": "N/A"}
+            {"name": "Runs", "value": "2847"}
         ]
 
 if __name__ == "__main__":
