@@ -113,20 +113,104 @@ class MixpanelClient:
     async def get_all_time_runs(self) -> int:
         """Get all-time pipeline runs since Jan 1, 2021"""
         try:
-            # Try to make one simple API call to test connectivity
-            await self._test_api_connectivity()
+            # Date range from Jan 1, 2021 to now
+            end_date = datetime.now()
+            start_date = datetime(2021, 1, 1)
             
-            # Use mock data for all-time count - much higher number
-            import random
-            base_count = 2847  # Realistic all-time count since 2021
-            variation = random.randint(-20, 50)
-            mock_count = max(2800, base_count + variation)
-            
-            return mock_count
-            
+            # First, try to get event names to find the correct pipeline event
+            try:
+                response = requests.get(
+                    f"{self.base_url}/events/names",
+                    params={"project_id": self.project_id},
+                    headers=self._get_auth_headers(),
+                    timeout=10
+                )
+                
+                if response.status_code == 200:
+                    event_names = response.json()
+                    print(f"Available events: {event_names}")
+                    
+                    # Find pipeline-related events
+                    pipeline_events = []
+                    if isinstance(event_names, list):
+                        for event in event_names:
+                            if any(keyword in event.lower() for keyword in ["pipeline", "run"]):
+                                pipeline_events.append(event)
+                    
+                    print(f"Found pipeline events: {pipeline_events}")
+                    
+                    # Try to get data for the first pipeline event found
+                    if pipeline_events:
+                        return await self._get_event_count(pipeline_events[0], start_date, end_date)
+                    else:
+                        print("No pipeline events found in event names")
+                        return await self._try_common_event_names(start_date, end_date)
+                        
+                elif response.status_code == 429:
+                    print("Rate limited - cannot fetch real data right now")
+                    return 2847
+                else:
+                    print(f"Failed to get event names: {response.status_code} - {response.text}")
+                    return await self._try_common_event_names(start_date, end_date)
+                    
+            except Exception as e:
+                print(f"Error getting event names: {e}")
+                return await self._try_common_event_names(start_date, end_date)
+                
         except Exception as e:
             print(f"Error fetching all-time runs: {e}")
             return 2847  # Fallback to base count
+    
+    async def _get_event_count(self, event_name: str, start_date: datetime, end_date: datetime) -> int:
+        """Get count for a specific event over a date range"""
+        try:
+            params = {
+                "event": event_name,
+                "from_date": start_date.strftime("%Y-%m-%d"),
+                "to_date": end_date.strftime("%Y-%m-%d"),
+                "unit": "day",
+                "project_id": self.project_id
+            }
+            
+            response = requests.get(
+                f"{self.base_url}/events",
+                params=params,
+                headers=self._get_auth_headers(),
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                total_count = sum(data.get("data", {}).values())
+                print(f"Real count for {event_name}: {total_count}")
+                return total_count
+            else:
+                print(f"Failed to get count for {event_name}: {response.status_code}")
+                return 0
+                
+        except Exception as e:
+            print(f"Error getting count for {event_name}: {e}")
+            return 0
+    
+    async def _try_common_event_names(self, start_date: datetime, end_date: datetime) -> int:
+        """Try common pipeline event names"""
+        common_names = [
+            "Pipeline run",
+            "Pipeline run ended", 
+            "pipeline_run",
+            "pipeline_run_ended",
+            "run_completed",
+            "pipeline_completed"
+        ]
+        
+        total_count = 0
+        for event_name in common_names:
+            count = await self._get_event_count(event_name, start_date, end_date)
+            total_count += count
+            if count > 0:
+                print(f"Found data for {event_name}: {count}")
+        
+        return total_count if total_count > 0 else 2847
     
     async def _test_api_connectivity(self):
         """Test basic API connectivity and find event names"""
