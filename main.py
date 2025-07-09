@@ -39,8 +39,8 @@ async def debug():
         return {"error": "Service account credentials not configured"}
     
     try:
-        await mixpanel_client._test_api_connectivity()
-        return {"message": "Check logs for API test results"}
+        all_time_runs = await mixpanel_client.get_all_time_runs()
+        return {"all_time_runs": all_time_runs}
     except Exception as e:
         return {"error": str(e)}
 
