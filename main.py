@@ -73,8 +73,8 @@ async def get_mixpanel_metrics():
     if not mixpanel_client.project_id or not mixpanel_client.service_account_username or not mixpanel_client.service_account_secret:
         # Return mock data if credentials not configured
         return [
-            {"name": "Runs", "value": "2847", "icon": 2620},  # Gear/settings icon for pipeline runs
-            {"name": "ZenML", "value": "3900", "icon": 2739}  # Star icon for GitHub stars
+            {"name": "Runs", "value": "2847", "icon": 10895},  # Play/run icon for pipeline runs
+            {"name": "Stars", "value": "3900", "icon": 55529}  # Star icon for GitHub stars
         ]
     
     try:
@@ -83,15 +83,15 @@ async def get_mixpanel_metrics():
         github_stars = await github_client.get_repo_stars("zenml-io", "zenml")
         
         return [
-            {"name": "Runs", "value": str(all_time_runs), "icon": 2620},  # Gear/settings icon for pipeline runs
-            {"name": "ZenML", "value": str(github_stars), "icon": 2739}  # Star icon for GitHub stars
+            {"name": "Runs", "value": str(all_time_runs), "icon": 10895},  # Play/run icon for pipeline runs
+            {"name": "Stars", "value": str(github_stars), "icon": 55529}  # Star icon for GitHub stars
         ]
     except Exception as e:
         print(f"Error fetching Mixpanel metrics: {e}")
         # Return fallback data on error
         return [
-            {"name": "Runs", "value": "2847", "icon": 2620},  # Gear/settings icon for pipeline runs
-            {"name": "ZenML", "value": "3900", "icon": 2739}  # Star icon for GitHub stars
+            {"name": "Runs", "value": "2847", "icon": 10895},  # Play/run icon for pipeline runs
+            {"name": "Stars", "value": "3900", "icon": 55529}  # Star icon for GitHub stars
         ]
 
 if __name__ == "__main__":
