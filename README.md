@@ -1,6 +1,6 @@
 # ZenML LaMetric App
 
-A FastAPI application that polls Mixpanel API to display metrics on LaMetric devices.
+A FastAPI application that polls Mixpanel API and GitHub API to display ZenML metrics on LaMetric devices.
 
 ## Setup
 
@@ -32,6 +32,7 @@ fly launch
 fly secrets set MIXPANEL_PROJECT_ID=your_project_id
 fly secrets set MIXPANEL_SERVICE_ACCOUNT_USERNAME=your_service_account_username
 fly secrets set MIXPANEL_SERVICE_ACCOUNT_SECRET=your_service_account_secret
+fly secrets set GITHUB_TOKEN=your_github_token  # Optional - for higher rate limits
 ```
 
 3. Deploy:
