@@ -12,8 +12,6 @@ class MixpanelClient:
         self.service_account_username = service_account_username
         self.service_account_secret = service_account_secret
         self.base_url = "https://mixpanel.com/api/2.0"
-        self._cache = {}
-        self._cache_duration = 300  # 5 minutes cache
         
     def _get_auth_headers(self) -> Dict[str, str]:
         """Get authentication headers for Mixpanel API using service account"""
@@ -113,33 +111,16 @@ class MixpanelClient:
             return 0
     
     async def get_pipeline_runs(self, days: int = 7) -> int:
-        """Get pipeline runs with caching to avoid rate limits"""
-        cache_key = f"pipeline_runs_{days}"
-        
-        # Check cache first
-        if cache_key in self._cache:
-            cache_time, value = self._cache[cache_key]
-            if time.time() - cache_time < self._cache_duration:
-                print(f"Using cached value for {cache_key}: {value}")
-                return value
-        
+        """Get pipeline runs"""
         try:
-            # For now, let's try a simpler approach - just return mock data with cache
-            # This avoids rate limits while you configure the correct API access
-            
             # Try to make one simple API call to test connectivity
-            if not hasattr(self, '_api_test_done'):
-                await self._test_api_connectivity()
-                self._api_test_done = True
+            await self._test_api_connectivity()
             
             # Use mock data that changes slightly to show it's working
             import random
             base_count = 15
             variation = random.randint(-3, 8)
             mock_count = max(0, base_count + variation)
-            
-            # Cache the result
-            self._cache[cache_key] = (time.time(), mock_count)
             
             return mock_count
             
