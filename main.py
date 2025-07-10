@@ -44,6 +44,34 @@ async def debug():
     except Exception as e:
         return {"error": str(e)}
 
+async def fetch_metrics():
+    """
+    Fetch metrics from Mixpanel API
+    """
+    if not mixpanel_client.project_id or not mixpanel_client.service_account_username or not mixpanel_client.service_account_secret:
+        # Return mock data if credentials not configured
+        return [
+            {"name": "Runs", "value": "2847", "icon": 10895},  # Play/run icon for pipeline runs
+            {"name": "Stars", "value": "3900", "icon": 55529}  # Star icon for GitHub stars
+        ]
+    
+    try:
+        # Get all-time runs count and GitHub stars
+        # all_time_runs = await mixpanel_client.get_all_time_runs()
+        github_stars = await github_client.get_repo_stars("zenml-io", "zenml")
+        
+        return [
+            # {"name": "Runs", "value": str(all_time_runs), "icon": 10895},  # Play/run icon for pipeline runs
+            {"name": "Stars", "value": str(github_stars), "icon": 55529}  # Star icon for GitHub stars
+        ]
+    except Exception as e:
+        print(f"Error fetching Mixpanel metrics: {e}")
+        # Return fallback data on error
+        return [
+            # {"name": "Runs", "value": "2847", "icon": 10895},  # Play/run icon for pipeline runs
+            {"name": "Stars", "value": "3900", "icon": 55529}  # Star icon for GitHub stars
+        ]
+
 @app.get("/metrics", response_model=LaMetricResponse)
 async def get_metrics():
     """
@@ -51,7 +79,7 @@ async def get_metrics():
     """
     try:
         # Get metrics from Mixpanel
-        metrics = await get_mixpanel_metrics()
+        metrics = await fetch_metrics()
         
         # Format for LaMetric
         frames = []
@@ -66,33 +94,6 @@ async def get_metrics():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-async def get_mixpanel_metrics():
-    """
-    Fetch metrics from Mixpanel API
-    """
-    if not mixpanel_client.project_id or not mixpanel_client.service_account_username or not mixpanel_client.service_account_secret:
-        # Return mock data if credentials not configured
-        return [
-            {"name": "Runs", "value": "2847", "icon": 10895},  # Play/run icon for pipeline runs
-            {"name": "Stars", "value": "3900", "icon": 55529}  # Star icon for GitHub stars
-        ]
-    
-    try:
-        # Get all-time runs count and GitHub stars
-        all_time_runs = await mixpanel_client.get_all_time_runs()
-        github_stars = await github_client.get_repo_stars("zenml-io", "zenml")
-        
-        return [
-            {"name": "Runs", "value": str(all_time_runs), "icon": 10895},  # Play/run icon for pipeline runs
-            {"name": "Stars", "value": str(github_stars), "icon": 55529}  # Star icon for GitHub stars
-        ]
-    except Exception as e:
-        print(f"Error fetching Mixpanel metrics: {e}")
-        # Return fallback data on error
-        return [
-            {"name": "Runs", "value": "2847", "icon": 10895},  # Play/run icon for pipeline runs
-            {"name": "Stars", "value": "3900", "icon": 55529}  # Star icon for GitHub stars
-        ]
 
 if __name__ == "__main__":
     import uvicorn
