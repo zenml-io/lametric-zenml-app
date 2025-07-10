@@ -11,7 +11,9 @@ class MixpanelClient:
         self.project_id = project_id
         self.service_account_username = service_account_username
         self.service_account_secret = service_account_secret
-        self.base_url = "https://mixpanel.com/api/2.0"
+        self.base_url = "https://eu.mixpanel.com/api/2.0"
+        self._cache = {}
+        self._cache_duration = 72  # 1.2 minutes in seconds
         
     def _get_auth_headers(self) -> Dict[str, str]:
         """Get authentication headers for Mixpanel API using service account"""
@@ -111,18 +113,28 @@ class MixpanelClient:
             return 0
     
     async def get_all_time_runs(self) -> int:
-        """Get all-time pipeline runs since Jan 1, 2021"""
+        """Get today's pipeline runs count with caching"""
+        cache_key = "today_runs"
+        current_time = time.time()
+        
+        # Check cache first
+        if cache_key in self._cache:
+            cached_data, cached_time = self._cache[cache_key]
+            if current_time - cached_time < self._cache_duration:
+                return cached_data
+        
         try:
+            today = datetime.now().strftime("%Y-%m-%d")
             params = {
-                "event": "Pipeline run ended",
-                "from_date": "2021-01-01",
-                "to_date": datetime.now().strftime("%Y-%m-%d"),
-                "unit": "month",
+                "event": json.dumps(["Pipeline run ended"]),
+                "from_date": today,
+                "to_date": today,
+                "unit": "day",
                 "project_id": self.project_id
             }
             
             response = requests.get(
-                f"{self.base_url}/segmentation",
+                f"{self.base_url}/events",
                 params=params,
                 headers=self._get_auth_headers(),
                 timeout=10
@@ -130,13 +142,21 @@ class MixpanelClient:
             
             if response.status_code == 200:
                 data = response.json()
-                return data.get("data", {}).get("values", {}).get("Pipeline run ended", 0)
+                # Get today's count
+                event_data = data.get("data", {}).get("values", {}).get("Pipeline run ended", {})
+                if isinstance(event_data, dict):
+                    result = event_data.get(today, 0)
+                    # Cache the result
+                    self._cache[cache_key] = (result, current_time)
+                    return result
+                return 0
             else:
-                print(f"Failed to get all-time runs: {response.status_code}")
+                print(f"Failed to get today's runs: {response.status_code}")
+                print(f"Response content: {response.text}")
                 return 0
                 
         except Exception as e:
-            print(f"Error fetching all-time runs: {e}")
+            print(f"Error fetching today's runs: {e}")
             return 0
     
     

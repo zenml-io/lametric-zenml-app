@@ -57,18 +57,18 @@ async def fetch_metrics():
     
     try:
         # Get all-time runs count and GitHub stars
-        # all_time_runs = await mixpanel_client.get_all_time_runs()
+        all_time_runs = await mixpanel_client.get_all_time_runs()
         github_stars = await github_client.get_repo_stars("zenml-io", "zenml")
         
         return [
-            # {"name": "Runs", "value": str(all_time_runs), "icon": 10895},  # Play/run icon for pipeline runs
+            {"name": "Runs", "value": str(all_time_runs), "icon": 10895},  # Play/run icon for pipeline runs
             {"name": "Stars", "value": str(github_stars), "icon": 55529}  # Star icon for GitHub stars
         ]
     except Exception as e:
         print(f"Error fetching Mixpanel metrics: {e}")
         # Return fallback data on error
         return [
-            # {"name": "Runs", "value": "2847", "icon": 10895},  # Play/run icon for pipeline runs
+            {"name": "Runs", "value": "2847", "icon": 10895},  # Play/run icon for pipeline runs
             {"name": "Stars", "value": "3900", "icon": 55529}  # Star icon for GitHub stars
         ]
 
